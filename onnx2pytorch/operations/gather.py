@@ -11,5 +11,5 @@ class Gather(nn.Module):
     def forward(self, data: torch.Tensor, indices: torch.Tensor):
         selection = self.selection + [indices.to(torch.int64)]
         # return data.__getitem__(selection)
-        return torch.index_select(input, dim=self.dim, index=indices)
+        return torch.index_select(data, dim=self.dim, index=indices)
 
