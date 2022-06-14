@@ -273,6 +273,10 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             op = Upsample(**extract_attributes(node))
         elif node.op_type == "Where":
             op = Where()
+        elif node.op_type == "Dropout":
+            op = nn.Identity()
+        elif node.op_type == "ArgMax":
+            op = Argmax(node.attribute[0].i)
         else:
             op = getattr(torch, node.op_type.lower(), None)
             if op is None:

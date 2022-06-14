@@ -38,6 +38,36 @@ class Slice(nn.Module):
         self.steps = steps
         super().__init__()
 
+    def _fixup_params(self, shape, start, end, axes, steps):
+        if start < 0:
+            start += shape[axes]
+        if end < 0:
+            if end == -9223372036854775807:  # -inf in ONNX
+                end = 0  # only possible when step == -1
+            else:
+                end += shape[axes]
+        if steps == -1:
+            start, end = end, start + 1  # TODO: more test more negative step size.
+        end = min(end, shape[axes])
+        return start, end
+
+    # Older Pytorch version only passes steps as input.
+    def forward(
+            self, x: torch.Tensor, starts=None, ends=None, axes=None, steps=None
+    ):
+        start = self.starts if starts is None else starts
+        end = self.ends if ends is None else ends
+        axes = self.axes if axes is None else axes
+        assert (steps == 1 or steps == -1) and axes == int(axes) and start == int(start) and end == int(end)
+        shape = x.shape if isinstance(x, torch.Tensor) else [len(x)]
+        start, end = self._fixup_params(shape, start, end, axes, steps)
+        final = torch.narrow(x, dim=int(axes), start=int(start), length=int(end - start))
+        if steps == -1:
+            final = torch.flip(final, dims=tuple(axes))
+        return final
+
+    """ old implementation
+  
     def forward(
         self, data: torch.Tensor, starts=None, ends=None, axes=None, steps=None
     ):
@@ -84,3 +114,4 @@ class Slice(nn.Module):
         else:
             # For torch < 1.8.1, torch.flip cannot handle empty dims
             return data.__getitem__(selection)
+    """
