@@ -1,29 +1,30 @@
 import warnings
+from packaging import version
 
+import torch
 from torch import nn
 from torch.nn.modules.batchnorm import _BatchNorm
 
-try:
+if version.parse(torch.__version__) >= version.parse("1.10.0"):
     from torch.nn.modules.batchnorm import _LazyNormBase
-
     class _LazyBatchNorm(_LazyNormBase, _BatchNorm):
 
         cls_to_become = _BatchNorm
-
-
-except ImportError:
-    # for torch < 1.10.0
+elif version.parse(torch.__version__) >= version.parse("1.9.0"):
     from torch.nn.modules.batchnorm import _LazyBatchNorm
+else:
+    warnings.warn('Lazy batch normalization is not supported by the current PyTorch version')
+    _LazyBatchNorm = None
 
+if _LazyBatchNorm is not None:
+    class LazyBatchNormUnsafe(_LazyBatchNorm):
+        def __init__(self, *args, spatial=True, **kwargs):
+            if not spatial:
+                warnings.warn("Non-spatial BatchNorm not implemented.", RuntimeWarning)
+            super().__init__(*args, **kwargs)
 
-class LazyBatchNormUnsafe(_LazyBatchNorm):
-    def __init__(self, *args, spatial=True, **kwargs):
-        if not spatial:
-            warnings.warn("Non-spatial BatchNorm not implemented.", RuntimeWarning)
-        super().__init__(*args, **kwargs)
-
-    def _check_input_dim(self, input):
-        return
+        def _check_input_dim(self, input):
+            return
 
 
 class BatchNormUnsafe(_BatchNorm):
