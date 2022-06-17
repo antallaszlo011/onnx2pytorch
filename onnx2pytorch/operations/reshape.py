@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import math
 
 from onnx2pytorch.operations.base import Operator
 from onnx2pytorch.utils import assign_values_to_dim, get_selection
@@ -25,8 +26,12 @@ class Reshape(Operator):
     def forward(self, input: torch.Tensor, shape=None):
         shape = shape if shape is not None else self.shape
         # This raises RuntimeWarning: iterating over a tensor.
-        shape = [x if x != 0 else input.size(i) for i, x in enumerate(shape)]
-
+        shape = [x if x > 0 else input.size(i) for i, x in enumerate(shape)]
+        if math.prod(shape) != input.numel():
+            print(f'Warning: shape {shape} in onnx2pytorch\'s Reshape is not '
+                f'compatible with input shape {input.shape}.')
+            shape[0] = -1
+            print(f'Assuming the issue is on the batch size. Modifying the shape into {shape}')
         if not self.enable_pruning:
             return torch.reshape(input, tuple(shape))
 
