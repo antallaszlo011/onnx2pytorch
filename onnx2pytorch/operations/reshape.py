@@ -1,13 +1,9 @@
 import torch
 from torch import nn
-from functools import reduce
-import operator
 
 from onnx2pytorch.operations.base import Operator
 from onnx2pytorch.utils import assign_values_to_dim, get_selection
 
-def prod(x):
-    return reduce(operator.mul, x, 1)
 
 class Reshape(Operator):
     """
@@ -16,7 +12,7 @@ class Reshape(Operator):
     smaller pruned input in the following passes.
     """
 
-    def __init__(self, enable_pruning, shape=None, keep_size=True):
+    def __init__(self, enable_pruning, shape=None, keep_size=True, quirks=None):
         super().__init__()
         self.enable_pruning = enable_pruning
         self.shape = shape
@@ -25,16 +21,18 @@ class Reshape(Operator):
         self.input_indices = None
         self.placeholder = None
         self.keep_size = keep_size
+        self.quirks = quirks if isinstance(quirks, dict) else {}
 
     def forward(self, input: torch.Tensor, shape=None):
         shape = shape if shape is not None else self.shape
         # This raises RuntimeWarning: iterating over a tensor.
         shape = [x if x > 0 else input.size(i) for i, x in enumerate(shape)]
-        if prod(shape) != input.numel():
-            print(f'Warning: shape {shape} in onnx2pytorch\'s Reshape is not '
-                f'compatible with input shape {input.shape}.')
+        if (shape[0] == 1 and len(shape) == 4
+                and self.quirks.get('fix_batch_size') is True):
             shape[0] = -1
-            print(f'Assuming the issue is on the batch size. Modifying the shape into {shape}')
+            if self.initial_input_shape is None:
+                print('Enabling quirks for Reshape operation: fix the first '
+                      'dimension shape to be -1 to support batchsize != 1')
         if not self.enable_pruning:
             return torch.reshape(input, tuple(shape))
 

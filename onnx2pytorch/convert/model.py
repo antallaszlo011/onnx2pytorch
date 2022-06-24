@@ -85,6 +85,7 @@ class ConvertModel(nn.Module):
         experimental=False,
         debug=False,
         enable_pruning=False,
+        quirks = None,
     ):
         """
         Convert onnx model to pytorch.
@@ -100,6 +101,9 @@ class ConvertModel(nn.Module):
             batchnorm layers could potentially produce false outputs.
         enable_pruning: bool
             Track kept/pruned indices between different calls to forward pass.
+        quirks: Optional[dict]
+            A dictionary containing quirks for each operation. The key of the
+            dictionary is the operation name, e.g., "Reshape".
 
         Returns
         -------
@@ -115,6 +119,7 @@ class ConvertModel(nn.Module):
 
         self.input_names = get_inputs_names(onnx_model.graph)
         self.output_names = get_outputs_names(onnx_model.graph)
+        quirks = quirks if isinstance(quirks, dict) else {}
         opset_version = onnx_model.opset_import[0].version
 
         # Create mapping from node (identified by first output) to submodule
@@ -124,6 +129,7 @@ class ConvertModel(nn.Module):
             opset_version,
             batch_dim,
             enable_pruning,
+            quirks,
         ):
             setattr(self, op_name, op)
             if isinstance(op, Loop) and debug:

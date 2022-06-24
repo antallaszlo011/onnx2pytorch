@@ -54,7 +54,7 @@ def get_init_parameter(modules, item, default):
     return default
 
 
-def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=True):
+def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=True, quirks=None):
     """
     Convert onnx model operations. Yields onnx's operator_id, operator_name and
     converted pytorch operator.
@@ -221,7 +221,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                 filter(lambda x: x.name == node.input[1], onnx_graph.initializer)
             )
             shape = np.copy(numpy_helper.to_array(shape[0])) if shape else None
-            op = Reshape(enable_pruning, shape)
+            op = Reshape(enable_pruning, shape, quirks=quirks.get("Reshape"))
         elif node.op_type == "Resize":
             op = Resize(**extract_attributes(node))
         elif node.op_type == "Scatter":
