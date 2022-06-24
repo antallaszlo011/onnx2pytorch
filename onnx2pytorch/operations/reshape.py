@@ -1,10 +1,13 @@
 import torch
 from torch import nn
-import math
+from functools import reduce
+import operator
 
 from onnx2pytorch.operations.base import Operator
 from onnx2pytorch.utils import assign_values_to_dim, get_selection
 
+def prod(x):
+    return reduce(operator.mul, x, 1)
 
 class Reshape(Operator):
     """
@@ -27,7 +30,7 @@ class Reshape(Operator):
         shape = shape if shape is not None else self.shape
         # This raises RuntimeWarning: iterating over a tensor.
         shape = [x if x > 0 else input.size(i) for i, x in enumerate(shape)]
-        if math.prod(shape) != input.numel():
+        if prod(shape) != input.numel():
             print(f'Warning: shape {shape} in onnx2pytorch\'s Reshape is not '
                 f'compatible with input shape {input.shape}.')
             shape[0] = -1
