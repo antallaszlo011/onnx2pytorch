@@ -26,7 +26,7 @@ class Reshape(Operator):
     def forward(self, input: torch.Tensor, shape=None):
         shape = shape if shape is not None else self.shape
         # This raises RuntimeWarning: iterating over a tensor.
-        shape = [x if x > 0 else input.size(i) for i, x in enumerate(shape)]
+        shape = [x if x != 0 else input.size(i) for i, x in enumerate(shape)]
         if (shape[0] == 1 and len(shape) == 4
                 and self.quirks.get('fix_batch_size') is True):
             shape[0] = -1
