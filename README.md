@@ -7,6 +7,8 @@
 A library to transform ONNX model to PyTorch. This library enables use of PyTorch 
 backend and all of its great features for manipulation of neural networks.
 
+This repository is forked from https://github.com/Talmaj/onnx2pytorch (version 4.0.1), with several fixes and customization by the authors of [alpha-beta-CROWN](https://github.com/Verified-Intelligence/alpha-beta-CROWN).
+
 ## Installation
 ```pip install onnx2pytorch```
 
