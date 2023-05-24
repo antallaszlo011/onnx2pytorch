@@ -58,6 +58,9 @@ class Slice(nn.Module):
         start = self.starts if starts is None else starts
         end = self.ends if ends is None else ends
         axes = self.axes if axes is None else axes
+        steps = self.steps if steps is None else steps
+        steps = 1 if steps is None else steps
+        
         assert (steps == 1 or steps == -1) and axes == int(axes) and start == int(start) and end == int(end)
         shape = x.shape if isinstance(x, torch.Tensor) else [len(x)]
         start, end = self._fixup_params(shape, start, end, axes, steps)
