@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from copy import deepcopy
 from functools import partial
 import warnings
@@ -155,7 +155,7 @@ class ConvertModel(nn.Module):
                 "Batchnorm layers could potentially produce false outputs."
             )
 
-    def forward(self, *input_list, **input_dict):
+    def forward(self, *input_list, return_all_nodes=False, **input_dict):
         if len(input_list) > 0 and len(input_dict) > 0:
             raise ValueError(
                 "forward-pass accepts either input_list (positional args) or "
@@ -171,6 +171,7 @@ class ConvertModel(nn.Module):
                 "Input with larger batch size than 1 not supported yet."
             )
         activations = dict(zip(self.input_names, inputs))
+        res_all_nodes = OrderedDict(activations)
         still_needed_by = deepcopy(self.needed_by)
 
         for node in self.onnx_model.graph.node:
@@ -229,6 +230,9 @@ class ConvertModel(nn.Module):
             else:
                 activations[out_op_id] = op(*in_activations)
 
+            if return_all_nodes:
+                res_all_nodes[out_op_id] = activations[out_op_id].clone()
+
             # Remove activations that are no longer needed
             for in_op_id in node.input:
                 if in_op_id in still_needed_by:
@@ -246,8 +250,11 @@ class ConvertModel(nn.Module):
                     node,
                 )
 
-        # collect all outputs
-        outputs = [activations[x] for x in self.output_names]
-        if len(outputs) == 1:
-            outputs = outputs[0]
-        return outputs
+        if return_all_nodes:
+            return res_all_nodes
+        else:
+            # collect all outputs
+            outputs = [activations[x] for x in self.output_names]
+            if len(outputs) == 1:
+                outputs = outputs[0]
+            return outputs
