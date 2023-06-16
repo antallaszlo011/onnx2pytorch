@@ -153,22 +153,22 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             if params:
                 weight = torch.from_numpy(numpy_helper.to_array(params[0]))
                 if node.input[0] in weights:
-                    op = nn.Linear(weight.shape[1], weight.shape[0], bias=False)
-                    op.weight.data = weight
+                    if weight.ndim == 2:
+                        op = nn.Linear(weight.shape[1], weight.shape[0], bias=False)
+                        op.weight.data = weight
+                    else:
+                        op = MatMul()
                 else:
                     op = nn.Linear(weight.shape[0], weight.shape[1], bias=False)
                     op.weight.data = weight.t()
-                    
                 # check if next node Add to add bias
                 if i + 1 < len(onnx_graph.node):
                     next_node = onnx_graph.node[i + 1]
-                    next_params = [
-                        weights[par_name]
-                        for par_name in next_node.input
-                        if par_name in weights
-                    ]
-                    if next_params and next_node.op_type == "Add":
-                        bias = torch.from_numpy(numpy_helper.to_array(next_params[0]))
+                    if (next_node.op_type == "Add"
+                            and next_node.input[0] == node.name
+                            and next_node.input[1] in weights):
+                        bias = torch.from_numpy(numpy_helper.to_array(
+                             weights[next_node.input[1]]))
                         op.bias = nn.Parameter(bias)
                         node.output.pop()
                         node.output.extend(next_node.output)

@@ -3,12 +3,10 @@ from copy import deepcopy
 from functools import partial
 import warnings
 
-import numpy as np
 import onnx
 import torch
 from onnx import numpy_helper
 from torch import nn
-from torch.jit import TracerWarning
 from torch.nn.modules.linear import Identity
 
 from onnx2pytorch.constants import (
@@ -178,18 +176,10 @@ class ConvertModel(nn.Module):
             # Identifying the layer ids and names
             out_op_id = node.output[0]
             out_op_name = self.mapping[out_op_id]
-            in_op_names = [
-                self.mapping.get(in_op_id, in_op_id)
-                for in_op_id in node.input
-                if in_op_id in activations
-            ]
 
             # getting correct layer
             op = getattr(self, out_op_name)
 
-            # if first layer choose input as in_activations
-            # if not in_op_names and len(node.input) == 1:
-            #    in_activations = input
             if isinstance(op, STANDARD_LAYERS) or (
                 isinstance(op, COMPOSITE_LAYERS)
                 and any(isinstance(x, STANDARD_LAYERS) for x in op.modules())

@@ -38,8 +38,14 @@ class Resize(Operator):
 
         if len(scales) == 0:
             scales = None
+            for i in range(len(sizes)):
+                if isinstance(sizes[i], torch.Tensor):
+                    sizes[i] = float(sizes[i])
         elif len(sizes) == 0:
             sizes = None
+            for i in range(len(scales)):
+                if isinstance(scales[i], torch.Tensor):
+                    scales[i] = float(scales[i])
         else:
             raise ValueError(
                 "Only one of the two, scales or sizes, needs to be defined."

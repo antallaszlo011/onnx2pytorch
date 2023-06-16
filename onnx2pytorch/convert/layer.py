@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from torch import nn
 from onnx import numpy_helper
@@ -72,7 +71,7 @@ def convert_layer(node, layer_type, params=None):
     else:
         # initialize operations without parameters (MaxPool, AvgPool, etc.)
 
-        # NOTE The default value should be False. It is unclear why 
+        # NOTE The default value should be False. It is unclear why
         # ToriML/onnx2pytorch set it to True.
         # if layer_type == "MaxPool":
         #     kwargs["return_indices"] = True
