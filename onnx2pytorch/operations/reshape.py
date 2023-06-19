@@ -51,9 +51,9 @@ class Reshape(Operator):
             # This raises RuntimeWarning: iterating over a tensor.
             # FIXME: this looks not right.
             # if the first dim is batch size, merge the batch size with the channel dim
-            if (torch.prod(torch.tensor(input.shape)) != torch.prod(shape) and len(input.size()) == len(shape) + 1 
-                    and torch.prod(torch.tensor(input.shape)) == input.shape[0] * torch.prod(shape) 
-                            and self.quirks.get("merge_batch_size_with_channel") is True):
+            if (torch.prod(torch.tensor(input.shape)) != torch.prod(shape) and len(input.size()) == len(shape) + 1
+                    and torch.prod(torch.tensor(input.shape)) == input.shape[0] * torch.prod(shape)
+                    and self.quirks.get("merge_batch_size_with_channel") is True):
                 shape = torch.tensor([input.shape[0] * input.shape[1] // 2] + shape.tolist()[1:], device=shape.device)
             shape = [x if x != 0 else input.size(i) for i, x in enumerate(shape)]
         if not self.enable_pruning:

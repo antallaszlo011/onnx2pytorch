@@ -3,8 +3,10 @@ from torch import nn
 
 
 class Transpose(nn.Module):
-    def __init__(self, dims=None):
+    def __init__(self, dims=None, quirks=None):
         self.dims = dims
+        self.quirks = {} if quirks is None else quirks
+        assert isinstance(self.quirks, dict)
         super().__init__()
 
     def forward(self, data: torch.Tensor):
