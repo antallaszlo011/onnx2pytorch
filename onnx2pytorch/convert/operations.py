@@ -164,7 +164,10 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                 # check if next node Add to add bias
                 if i + 1 < len(onnx_graph.node):
                     next_node = onnx_graph.node[i + 1]
-                    if next_node.op_type == "Add" and next_node.input[0] == node.name and next_node.input[1] in weights:
+                    if (next_node.op_type == "Add" 
+                            and len(node.output) == 1
+                            and next_node.input[0] == node.output[0]
+                            and next_node.input[1] in weights):
                         bias = torch.from_numpy(numpy_helper.to_array(weights[next_node.input[1]]))
                         op.bias = nn.Parameter(bias)
                         node.output.pop()
