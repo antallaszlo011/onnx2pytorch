@@ -33,7 +33,7 @@ class Reshape(Operator):
 
     def forward(self, input: torch.Tensor, shape=None):
         shape = shape if shape is not None else self.shape
-        if shape[0] == 1 and (len(shape) == 4 or len(shape) == 2) and self.quirks.get("fix_batch_size") is True:
+        if shape[0] == 1 and len(shape) in [2, 3, 4, 5] and self.quirks.get("fix_batch_size") is True:
             incomplete_indices = (shape == -1).nonzero()
             assert incomplete_indices.numel() <= 1, "at most one dimension can be -1 in reshape"
             if incomplete_indices.numel() == 1 and shape[0] != -1:
