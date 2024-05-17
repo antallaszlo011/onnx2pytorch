@@ -153,7 +153,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             if params:
                 weight = torch.from_numpy(numpy_helper.to_array(params[0]))
                 if node.input[0] in weights:
-                    if weight.ndim == 2:
+                    if weight.ndim == 2 and node.input[1] not in weights:
                         op = nn.Linear(weight.shape[1], weight.shape[0], bias=False)
                         op.weight.data = weight
                     else:
