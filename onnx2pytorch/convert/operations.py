@@ -159,10 +159,13 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
                     else:
                         op = MatMul()
                 else:
-                    op = nn.Linear(weight.shape[0], weight.shape[1], bias=False)
-                    op.weight.data = weight.t()
+                    if weight.ndim == 2:
+                        op = nn.Linear(weight.shape[0], weight.shape[1], bias=False)
+                        op.weight.data = weight.t()
+                    else:
+                        op = MatMul()
                 # check if next node Add to add bias
-                if i + 1 < len(onnx_graph.node):
+                if isinstance(op, nn.Linear) and i + 1 < len(onnx_graph.node):
                     next_node = onnx_graph.node[i + 1]
                     if next_node.op_type == "Add" and len(node.output) == 1:
                         bias = None
