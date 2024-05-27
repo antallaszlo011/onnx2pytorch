@@ -223,14 +223,6 @@ class ConvertModel(nn.Module):
             if return_all_nodes:
                 res_all_nodes[out_op_id] = activations[out_op_id].clone()
 
-            # Remove activations that are no longer needed
-            for in_op_id in node.input:
-                if in_op_id in still_needed_by:
-                    still_needed_by[in_op_id].discard(out_op_id)
-                    if len(still_needed_by[in_op_id]) == 0:
-                        if in_op_id in activations:
-                            del activations[in_op_id]
-
             if self.debug:
                 # compare if the activations of pytorch are the same as from onnxruntime
                 debug_model_conversion(
@@ -239,6 +231,14 @@ class ConvertModel(nn.Module):
                     [activations[out_op_id] for out_op_id in node.output],
                     node,
                 )
+            else:
+                # Remove activations that are no longer needed
+                for in_op_id in node.input:
+                    if in_op_id in still_needed_by:
+                        still_needed_by[in_op_id].discard(out_op_id)
+                        if len(still_needed_by[in_op_id]) == 0:
+                            if in_op_id in activations:
+                                del activations[in_op_id]
 
         if return_all_nodes:
             return res_all_nodes
